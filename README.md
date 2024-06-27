@@ -1,58 +1,108 @@
 # DiscScript for C#
 
-DiscScript (DISC for Data Instruction Stream Code) is a **text serialization format**, to write and read data in human-readable format.
+DiscScript (DISC for Data Instruction Stream Code) is a **data serialization scripting language**, to write and read data in human-readable format.
 
-It's like JSON and YAML, but has optional **data typing and structures**.
+It's like JSON and YAML, but has optional **data typing and structures**, for **extra compact** data files.
 
 The project is still **work-in-progress**, but is already working quite well.
 
 ## Example
 
-Here's how to serialize C# class
+This is a simple C# class:
 
 ```cs
-[DSClass]
+[DSClass] // attribute for the DiscScript serializer
 public class Article
 {
+  public Article(string title, int id)
+  {
+    Title = title;
+    ID = id;
+  }
   public string Title;
   public int ID;
 }
-
-Article a = new Article("Example", 123);
-MapSerializer.Write(a, new MFileOutput("map_test"));
-// or
-StructSerializer.Write(a, new MFileOutput("struct_test"));
 ```
 
-in **map format** with member names and values written:
+Here's how to serialize it in DiscScript's **struct format**:
+
+```cs
+Article a = new Article("Example", 123);
+StructSerializer.Write(a, new MFileOutput("struct_test.ds"));
+```
+
+The `Write` method serializes the object `a` to a DiscScript file `struct_test.ds` with following content:
+
+```
+$struct DiscScript.Article
+  string Title
+  int32 ID
+[DiscScript.Article] root
+  - "Example"
+  - 123
+```
+
+The DiscScript file starts with a data structure (Article) definition that defines member names and data types.
+After that, the actual data, i.e. class member values are written. 
+
+Here's how to serialize the class with DiscScript in **map format** with member names and values written:
+
+```cs
+Article a = new Article("Example", 123);
+MapSerializer.Write(a, new MFileOutput("map_test.ds"));
+```
+
+Output file:
 
 ```
 Title: "Example"
 ID: 123
 ```
 
-or in **struct format** with a struct definition and the values using the struct:
-
-```
-$struct DSClass.Article
-  string Title
-  int32 ID
-[DSClass.Article] root
-  - "Example"
-  - 123
-```
-
 Deserializing the object data have the same result regardless of the serializing method:
 
 ```
-var article1 = MDeserializer.ReadStruct<Person>(new MFileInput("struct_test"));
-var article2 = MDeserializer.Read<Person>(new MFileInput("map_test");
+var article1 = MDeserializer.ReadStruct<Person>(new MFileInput("struct_test.ds"));
+var article2 = MDeserializer.Read<Person>(new MFileInput("map_test.ds");
 ```
 
-Struct format is much smaller with large data sets as it writes member names only in introductions,
+Struct format results much smaller script files when serializing large data sets as it writes member names only in introductions,
 not every time that value is assigned like map format does, as well as JSON and YAML.
 
+### More Complex Example
+
 Here's another example of the same data in map and struct formats.
+
+Class definitions:
+```cs
+public enum TestEnum
+{
+  ALPHA = 1,
+  BETA = 3
+}
+[DSClass]
+public class Article
+{
+  public string Title;
+  public int ID;
+  // ...
+}
+[DSClass]
+public class Person
+{
+  public string Prop;
+  public string Name;
+  public double Points;
+  public Article? Null = null;
+  public TestEnum EnumLetter;
+  public Dictionary<int,Article> Articles;
+  public int[] IntArray;
+  public Article[] ArticleArray;
+  public Dictionary<int,string> Dic;
+  public List<string> ListSample;
+  public string Rank;
+}
+```
 
 Map format:
 ```
@@ -179,7 +229,7 @@ DiscScript supports all basic C# data types:
 
 Requirements: Visual Studio (Code) with .NET support.
 
-Open **vs/InstructionScript.sln** and run the **Example** project to see how it works. Other projects in the VS solution:
+Open **vs/DiscScript.sln** and run the **Example** project to see how it works. Other projects in the VS solution:
 - **DiscScriptLib:** core implementation.
 - **DiscScriptTest:** automatic testing.
 - **DiscScriptCLI:** work-in-progress command line tool.
