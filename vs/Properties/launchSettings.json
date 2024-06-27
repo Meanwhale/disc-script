@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "InstructionScript": {
+      "commandName": "Project",
+      "commandLineArgs": "test",
+      "remoteDebugEnabled": false
+    }
+  }
+}
